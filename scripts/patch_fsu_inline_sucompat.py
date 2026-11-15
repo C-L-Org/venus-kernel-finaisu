@@ -122,7 +122,10 @@ new_body = """    if (!inline_sucompat_allowed() || !inline_is_su_path(path) || 
         fd_install(tmp_fd, ksud_file);
         *fd = tmp_fd;
         *flags |= AT_EMPTY_PATH;
-        (*filename_ptr)->name[0] = '\\0';
+        /* filename->name 是 const char *，索引赋值会被 clang 判
+         * "read-only variable is not assignable"（run52 即此失败）；
+         * 与上游一致，用 memcpy 走 (void *) 强转清空文件名。 */
+        memcpy((void *)(*filename_ptr)->name, "", 1);
     }
 
     return 0;
