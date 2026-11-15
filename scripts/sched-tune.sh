@@ -9,7 +9,7 @@
 #   pelt-force         : schedutil 强制 PELT util 路径
 #                        (WALT 信号路径在 venus 上会卡小米 logo)
 #
-# 补丁针对 cvbyisme/android_kernel_xiaomi_sm8350_miyume@main 生成;
+# 补丁针对 C-L-Org/android_kernel_xiaomi_sm8350_miyume@main 生成;
 # 内核树漂移时 apply 显式失败,不静默跳过。
 
 set -u
