@@ -77,6 +77,14 @@ jobs:
             echo "not the SUSFS Inline backend, sucompat patch skipped"
           fi
 
+      - name: Patch FinaSU shell root profile (adb shell su -> root)
+        run: |
+          # allow_shell 默认 false（release 构建），shell 的 ksu_get_root_profile
+          # 会命中 allowlist 条目 profile 而非 default root profile，导致普通
+          # adb shell 的 "su -c id" 返回 uid=2000。改为 shell 总是走 default
+          # root profile（uid=0），与 app 的 su 行为一致。
+          python3 ci/scripts/patch_shell_profile.py kernel/KernelSU/kernel/policy/allowlist.c
+
       - name: Integrate SUSFS 5.4 into FinaSU kernel tree
         run: |
           chmod +x ci/scripts/susfs-setup.sh
