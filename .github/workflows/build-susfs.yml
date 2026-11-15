@@ -10,7 +10,7 @@ on:
       kernel_repo:
         description: 'kernel source repo (owner/name)'
         required: false
-        default: 'cvbyisme/android_kernel_xiaomi_sm8350_miyume'
+        default: 'C-L-Org/android_kernel_xiaomi_sm8350_miyume'
       kernel_ref:
         description: 'kernel source ref'
         required: false
@@ -47,7 +47,7 @@ jobs:
       - name: Checkout kernel sources
         run: |
           git clone --depth 1 --branch "${{ inputs.kernel_ref || 'main' }}" \
-            "https://github.com/${{ inputs.kernel_repo || 'cvbyisme/android_kernel_xiaomi_sm8350_miyume' }}.git" kernel
+            "https://github.com/${{ inputs.kernel_repo || 'C-L-Org/android_kernel_xiaomi_sm8350_miyume' }}.git" kernel
           echo "kernel HEAD: $(git -C kernel rev-parse --short HEAD)"
 
       # 功耗调优：内核调度源码补丁（input boost 默认关、io-is-busy 默认关、
