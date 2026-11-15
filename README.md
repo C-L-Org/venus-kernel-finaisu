@@ -15,7 +15,7 @@
 |---|---|
 | 机型 | Xiaomi 11（venus / M2011K2C） |
 | SoC | Snapdragon 888 / SM8350 |
-| 内核基线 | Linux 5.4.302（`cvbyisme/android_kernel_xiaomi_sm8350_miyume`） |
+| 内核基线 | Linux 5.4.302（`C-L-Org/android_kernel_xiaomi_sm8350_miyume`） |
 | 原厂内核 | `5.4.274-qgki-gcc3ec22f5061` |
 | Android | 16 / HyperOS 3.0（WPBCNXM） |
 | 工具链 | ZyCromerZ Clang 14.0.6 |
@@ -25,7 +25,7 @@
 
 ## 快速开始
 
-1. 到 **[Releases](../../releases)** 下载 **[`ak3-susfs-8`](https://github.com/cvbyisme/venus-kernel-finaisu/releases/tag/ak3-susfs-8)**（最新稳定包：FinaSU v1.6.1 + **SUSFS Inline** + preinit runner 运行时关闭）或最新的 `venus-test-*`
+1. 到 **[Releases](../../releases)** 下载 **[`ak3-susfs-8`](https://github.com/C-L-Org/venus-kernel-finaisu/releases/tag/ak3-susfs-8)**（最新稳定包：FinaSU v1.6.1 + **SUSFS Inline** + preinit runner 运行时关闭）或最新的 `venus-test-*`
 2. 进 **TWRP** 刷入或者APP刷入
 3. 重启，打开 FinaSU —— 首屏显示 **「工作中」** 即完成
 
@@ -258,7 +258,7 @@ FinaSU v1.4.2 的 ksud 要求内核 SUSFS 版本字符串**精确等于 `v2.3.0`
 
 ```sh
 curl -sL -o /sdcard/Download/venus-selftest.sh \
-  https://raw.githubusercontent.com/cvbyisme/venus-kernel-finaisu/main/scripts/venus-selftest.sh
+  https://raw.githubusercontent.com/C-L-Org/venus-kernel-finaisu/main/scripts/venus-selftest.sh
 su -c 'sh /sdcard/Download/venus-selftest.sh'
 ```
 
@@ -287,7 +287,7 @@ su -c 'sh /sdcard/Download/venus-selftest.sh'
 
 | Tag | 内容 |
 |---|---|
-| **[`ak3-susfs-8`](https://github.com/cvbyisme/venus-kernel-finaisu/releases/tag/ak3-susfs-8)** | **当前稳定版**：SUSFS **Inline 后端**正式化（内核树 `1c9bda194`，fs/exec.c 等直调 + 官方门禁通过）+ preinit runner 运行时关闭（5.4 稳定，对齐 SukiSU 做法）；管理器沿用 ak3-susfs-7 的 v1.6.1 APK |
+| **[`ak3-susfs-8`](https://github.com/C-L-Org/venus-kernel-finaisu/releases/tag/ak3-susfs-8)** | **当前稳定版**：SUSFS **Inline 后端**正式化（内核树 `1c9bda194`，fs/exec.c 等直调 + 官方门禁通过）+ preinit runner 运行时关闭（5.4 稳定，对齐 SukiSU 做法）；管理器沿用 ak3-susfs-7 的 v1.6.1 APK |
 | `ak3-susfs-7` | FinaSU v1.6.1 + SUSFS **Tracepoint** 后端（2026-11-13，含 `FinaSU_v1.6.1_33198-release.apk` 管理器 + run43 内核） |
 | `ak3-susfs-6` | FinaSU v1.5.0 + uname procfs 伪装（`/proc/version`、osrelease、version 与 `uname(2)` 一致） |：ak3-susfs-5 + uname procfs 伪装（`/proc/version`、`/proc/sys/kernel/{osrelease,version}` 与 `uname(2)` 一致；app 侧 zygote 缓存限制见第六节） |
 | `ak3-susfs-5` | FinaSU v1.5.0 基线稳定版（无 uname procfs 伪装）：FinaSU v1.5.0（保留两个内核 SELinux 提交）+ 5.4 AVC seqno 兼容补丁 + **默认内嵌匹配版本 ksud**（TWRP 刷入直接覆盖旧版，模块首次开机即正常）；空载亮屏约 1.3W（2026-11-08 实机验证） |
