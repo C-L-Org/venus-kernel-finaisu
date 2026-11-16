@@ -25,7 +25,7 @@
 
 ## 快速开始
 
-1. 到 **[Releases](../../releases)** 下载 **[`ak3-susfs-8`](https://github.com/C-L-Org/venus-kernel-finaisu/releases/tag/ak3-susfs-8)**（最新稳定包：FinaSU v1.6.1 + **SUSFS Inline** + preinit runner 运行时关闭）或最新的 `venus-test-*`
+1. 到 **[Releases](../../releases)** 下载 **[`ak3-susfs-9`](https://github.com/C-L-Org/venus-kernel-finaisu/releases/tag/ak3-susfs-9)**（最新稳定包：**Tracepoint 后端** + FinaSU v1.6.3 + uname procfs 伪装）或最新的 `venus-test-*`
 2. 进 **TWRP** 刷入或者APP刷入
 3. 重启，打开 FinaSU —— 首屏显示 **「工作中」** 即完成
 
@@ -194,20 +194,15 @@ FinaSU v1.4.2 的 ksud 要求内核 SUSFS 版本字符串**精确等于 `v2.3.0`
 
 > 早期在 `power-wip` 分支上试验的 `WQ_POWER_EFFICIENT_DEFAULT` / `SCHED_DEBUG` / `PROFILING` 未纳入正式版：`SCHED_DEBUG` 在最终配置里本就由依赖关系决定（无收益），另两项收益小、且与卡屏问题无关，故不启用。
 
-### 七、SUSFS Inline 后端（ak3-susfs-8 起默认）
+### 七、SUSFS Inline 实验（ak3-susfs-8，已回退）
 
-**切换**：内核树 `main` 已将 `CONFIG_KSU_HOOK_SUSFS_INLINE=y` 的 Inline 直调（`fs/exec.c`、`fs/open.c`、`fs/stat.c` 等，`check_susfs_inline.sh` 门禁通过）合入，构建默认走 Inline 后端。
+ak3-susfs-8 曾把 `CONFIG_KSU_HOOK_SUSFS_INLINE=y` 的 Inline 直调（`fs/exec.c`、`fs/open.c`、`fs/stat.c` 等，`check_susfs_inline.sh` 门禁通过）合入，并在运行时关闭 preinit runner（`ksu_preinit_enabled=false`）。
 
-**preinit runner 运行时关闭**：
+**实测问题**：Inline 下 `su` 失效 —— `su -c id` 仍返回 `uid=2000(shell)`。dmesg 显示 sucompat 执行（`direct exec su -> ksud (fd)`）、ksud 启动（`ksu fd installed`），但最终 uid 未提升。最可疑的是 profile 的 `NO_NEW_PRIVS` 标签 → `TIF_KSU_DISABLE_ESCAPE_WITH_ROOT` 与 Inline 的 fd-exec 路径交互（Tracepoint 走 syscall 入口，不受影响）。
 
-| 项 | 说明 |
-|---|---|
-| preinit 编译 | 保留（Inline 直调的 `ksu_setup_preinit_file` / `ksu_preinit_handle_post_execveat` 符号必须存在，缺了会 vmlinux 链接失败） |
-| 运行时开关 | `ksu_preinit_enabled = false`（workflow 默认 `disable_preinit=true`） |
-| 为什么关 | 5.4 上 preinit runner 会卡第一屏（run45 实测，无 pstore）；关闭后与 SukiSU 5.4 的做法一致 |
-| 代价 | 失去「init.rc 解析前的早期注入」（极少模块依赖）；普通模块（post-fs-data overlayfs）与 root 不受影响 |
+**ak3-susfs-9 起已回退 Tracepoint**（workflow `kernel_ref=tracepoint`，内核 `a0c722931`），`su` 恢复正常。
 
-**已知限制**：app 侧 `System.getProperty("os.version")` 由 zygote 启动时缓存，若 SUSFS uname 在 zygote 之后应用，app 仍可能读到真实值（Hunter 等严格检测器可能仍报 `uname spoofing`）。
+**Inline 修复记录**：[docs/inline-su-issue.md](docs/inline-su-issue.md)（候选修复方向 + 作者的 `fix/inline-su-early` / `fix/inline-su-swap` 分支）。
 
 
 ---
@@ -287,9 +282,10 @@ su -c 'sh /sdcard/Download/venus-selftest.sh'
 
 | Tag | 内容 |
 |---|---|
-| **[`ak3-susfs-8`](https://github.com/C-L-Org/venus-kernel-finaisu/releases/tag/ak3-susfs-8)** | **当前稳定版**：SUSFS **Inline 后端**正式化（内核树 `1c9bda194`，fs/exec.c 等直调 + 官方门禁通过）+ preinit runner 运行时关闭（5.4 稳定，对齐 SukiSU 做法）；管理器沿用 ak3-susfs-7 的 v1.6.1 APK |
+| **[`ak3-susfs-9`](https://github.com/C-L-Org/venus-kernel-finaisu/releases/tag/ak3-susfs-9)** | **当前稳定版**：**Tracepoint 后端**（回退，su 正常）+ FinaSU **v1.6.3** + uname procfs 伪装；基于 run59（内核 `a0c722931` + FinaSU `06d71e8`） |
+| `ak3-susfs-8` | **Inline 实验版（已回退）**：SUSFS Inline 后端 + preinit runner 运行时关闭；⚠️ 实测 `su` 失效（`su -c id` 仍 uid 2000），分析见 [docs/inline-su-issue.md](docs/inline-su-issue.md) |
 | `ak3-susfs-7` | FinaSU v1.6.1 + SUSFS **Tracepoint** 后端（2026-11-13，含 `FinaSU_v1.6.1_33198-release.apk` 管理器 + run43 内核） |
-| `ak3-susfs-6` | FinaSU v1.5.0 + uname procfs 伪装（`/proc/version`、osrelease、version 与 `uname(2)` 一致） |：ak3-susfs-5 + uname procfs 伪装（`/proc/version`、`/proc/sys/kernel/{osrelease,version}` 与 `uname(2)` 一致；app 侧 zygote 缓存限制见第六节） |
+| `ak3-susfs-6` | FinaSU v1.5.0 + uname procfs 伪装（`/proc/version`、`/proc/sys/kernel/{osrelease,version}` 与 `uname(2)` 一致；app 侧 zygote 缓存限制见第六节） |
 | `ak3-susfs-5` | FinaSU v1.5.0 基线稳定版（无 uname procfs 伪装）：FinaSU v1.5.0（保留两个内核 SELinux 提交）+ 5.4 AVC seqno 兼容补丁 + **默认内嵌匹配版本 ksud**（TWRP 刷入直接覆盖旧版，模块首次开机即正常）；空载亮屏约 1.3W（2026-11-08 实机验证） |
 | `ak3-susfs-4` | 上一稳定版：同内核，但默认不内嵌 ksud（刷入删除旧版，首次开机模块会失效、需重启两次恢复） |
 | `ak3-susfs-2` | FinaSU + SUSFS v2.3.0 + SELinux 隐藏双层修复，春秋 native 4.6.2 探测通过（2026-11-07） |
