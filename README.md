@@ -113,7 +113,7 @@ ccflags-y += -include $(srctree)/include/linux/ksu54_compat.h
 
 FinaSU v1.4.2 的 ksud 要求内核 SUSFS 版本字符串**精确等于 `v2.3.0`**，否则判定 `unknown_protocol`，管理器 SUSFS 页只读、全功能不可用。FinaSU v1.6.1 的 ksud 接受 `v2.3.0` 与 `v2.4.0`（v2.4.0 需要内核 SELinux hide 重构契约，本树暂未升级，保持 v2.3.0）。v2.1.0 与 v2.3.0 的用户态协议完全兼容（23 个 `CMD_SUSFS_*` 编号逐一相同、`st_susfs_*` wire 结构布局一致，差异只在内核内部实现）。因此 `scripts/susfs-version.sh` 让内核如实汇报 `v2.3.0`，并顺手修掉 v2.1.0 的 `KSTAT_SPOOF_CTIME_TV_SEC (1 < 8)` 笔误（应为 `(1 << 8)`）。
 
-钩子后端：**SUSFS Inline**（ak3-susfs-8 起默认，详见第七节）。早期结论「Inline 在 5.4 上 panic、不采用」已修正 —— 实际卡屏来自 **preinit runner** 在 5.4 的 pid1 exec 路径（run45 实测，无 pstore），与 Inline 直调本体无关；保留 preinit 编译（Inline 直调符号必须存在）但把运行时开关关掉（`ksu_preinit_enabled=false`）后，Inline 在 5.4 上稳定可用。Tracepoint 仍保留为构建可选。
+钩子后端：**Tracepoint**（ak3-susfs-9 起默认，`su` 正常）。Inline 后端（ak3-susfs-8）实测 `su` 失效（`su -c id` 仍 `uid=2000`），已回退并记录于 [docs/inline-su-issue.md](docs/inline-su-issue.md)（候选修复方向见第七节）。
 
 > 历史现象：早期版本 SUSFS 一直报「未知协议」，dmesg 里 `show_version` / `show_variant` / `get_enabled_features` 均 `ret:0`（内核能响应 ioctl），最终定位为版本字符串不一致 —— 已由 `susfs-version.sh` 彻底解决，不是集成方式问题。
 
