@@ -410,12 +410,18 @@ jobs:
             echo "signature slot2 gate: PASS"
           fi
 
+          # ===== 外部模块：zyprobe（内核辅助 ptrace 验证，独立产物，不进内核）=====
+          echo "=== build external module: zyprobe ==="
+          make -j$(nproc) O=out M="$PWD/../modules/zyprobe" modules 2>&1 | tail -40
+          ls -l ../modules/zyprobe/zyprobe.ko || { echo "::error::zyprobe.ko not built"; exit 1; }
+
       - name: Collect artifacts
         run: |
           mkdir -p artifact
           cp kernel/out/arch/arm64/boot/Image artifact/Image
           cp kernel/out/arch/arm64/boot/Image.gz artifact/Image.gz || true
           cp kernel/out/.config artifact/kernel.config
+          cp modules/zyprobe/zyprobe.ko artifact/zyprobe.ko || true
           (cd artifact && sha256sum Image > Image.sha256)
           strings artifact/Image | grep -m3 'Linux version' || true
 
