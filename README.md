@@ -25,7 +25,7 @@
 
 ## 快速开始
 
-1. 到 **[Releases](../../releases)** 下载 **[`ak3-susfs-10`](https://github.com/C-L-Org/venus-kernel-finaisu/releases/tag/ak3-susfs-10)**（最新稳定包：**Tracepoint 后端** + FinaSU v1.6.4 + uname procfs 伪装）或最新的 `venus-test-*`
+1. 到 **[Releases](../../releases)** 下载 **[`ak3-susfs-11`](https://github.com/C-L-Org/venus-kernel-finaisu/releases/tag/ak3-susfs-11)**（最新稳定包：**Tracepoint 后端** + FinaSU v1.7.0 + uname procfs 伪装）或最新的 `venus-test-*`
 2. 进 **TWRP** 刷入或者APP刷入
 3. 重启，打开 FinaSU —— 首屏显示 **「工作中」** 即完成
 
@@ -282,7 +282,8 @@ su -c 'sh /sdcard/Download/venus-selftest.sh'
 
 | Tag | 内容 |
 |---|---|
-| **[`ak3-susfs-10`](https://github.com/C-L-Org/venus-kernel-finaisu/releases/tag/ak3-susfs-10)** | **当前稳定版**：**Tracepoint 后端**（su 正常）+ FinaSU **v1.6.4** + uname procfs 伪装；基于 run60（内核 `a0c722931` + FinaSU `ff0e34f`）。v1.6.4 新增 SUSFS 优先级 UID 过滤（需 `CONFIG_KSU_SUSFS_PRIORITY_UID_FILTER`，本树未开启，ksud 自动跳过不影响其余功能）、内核符号精确查找 bugfix、管理器界面刷新 |
+| **[`ak3-susfs-11`](https://github.com/C-L-Org/venus-kernel-finaisu/releases/tag/ak3-susfs-11)** | **当前稳定版**：**Tracepoint 后端**（`su` 正常）+ FinaSU **v1.7.0** + uname procfs 伪装；基于 run62（内核 `a0c722931` + FinaSU `a85c03a`，30,093,350 B，md5 `77756a5792a52061fb2dfe581fbd9f75`）。v1.7.0 上游 13 commits，`kernel/` 仅 `selinux/rules.c` 新增 logd getattr 规则（preflight 锚点 2/2 命中）；管理器内置 FolkZygisk 状态面板与 Sui 引擎信息 |
+| `ak3-susfs-10` | FinaSU v1.6.4 + Tracepoint 后端（2026-11-18，基于 run60） |：**Tracepoint 后端**（su 正常）+ FinaSU **v1.6.4** + uname procfs 伪装；基于 run60（内核 `a0c722931` + FinaSU `ff0e34f`）。v1.6.4 新增 SUSFS 优先级 UID 过滤（需 `CONFIG_KSU_SUSFS_PRIORITY_UID_FILTER`，本树未开启，ksud 自动跳过不影响其余功能）、内核符号精确查找 bugfix、管理器界面刷新 |
 | `ak3-susfs-9` | FinaSU v1.6.3 + Tracepoint 后端稳定版（2026-11-16，基于 run59） |
 | `ak3-susfs-8` | **Inline 实验版（已回退）**：SUSFS Inline 后端 + preinit runner 运行时关闭；⚠️ 实测 `su` 失效（`su -c id` 仍 uid 2000），分析见 [docs/inline-su-issue.md](docs/inline-su-issue.md) |
 | `ak3-susfs-7` | FinaSU v1.6.1 + SUSFS **Tracepoint** 后端（2026-11-13，含 `FinaSU_v1.6.1_33198-release.apk` 管理器 + run43 内核） |
