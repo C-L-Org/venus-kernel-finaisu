@@ -1,8 +1,8 @@
 diff --git a/kernel/sched/cpufreq_schedutil.c b/kernel/sched/cpufreq_schedutil.c
-index 826d640..45d0e5e 100644
+index 826d640..1df3ebc 100644
 --- a/kernel/sched/cpufreq_schedutil.c
 +++ b/kernel/sched/cpufreq_schedutil.c
-@@ -16,9 +16,28 @@
+@@ -16,9 +16,43 @@
  #include <trace/hooks/sched.h>
  
  #include <linux/hwui_mon.h>
@@ -13,34 +13,65 @@ index 826d640..45d0e5e 100644
 +/*
 + * QTI cpufreq-hw reports cpuinfo.transition_latency == 0 and leaves
 + * policy->transition_delay_us unset, so cpufreq_policy_transition_delay_us()
-+ * returns 0 and schedutil starts with no up/down rate limiting at all.
-+ * Every capacity update could then flip the frequency, which shows up as
-+ * the whole cluster sawtoothing between the lowest and highest OPPs.
++ * returns 0 and schedutil starts with no up/down rate limiting at all: every
++ * capacity update may flip the frequency, which shows up as the whole cluster
++ * sawtoothing between the lowest and highest OPPs.
 + *
-+ * Keep a floor so transitions are spaced out. Both floors are writable at
-+ * runtime via /sys/module/cpufreq_schedutil/parameters/.
++ * Two knobs, both writable at runtime via
++ * /sys/module/cpufreq_schedutil/parameters/:
++ *  - rate limit floors: keep transitions spaced out
++ *  - per-cluster request caps: narrow the swing band so the governor stops
++ *    bouncing over the whole OPP range (0 = no cap)
 + */
 +static unsigned int sugov_up_rate_limit_floor_us __read_mostly = 2000;
 +module_param_named(up_rate_limit_floor_us, sugov_up_rate_limit_floor_us, uint, 0644);
 +MODULE_PARM_DESC(up_rate_limit_floor_us, "Minimum schedutil up rate limit in us");
 +
-+static unsigned int sugov_down_rate_limit_floor_us __read_mostly = 30000;
++static unsigned int sugov_down_rate_limit_floor_us __read_mostly = 50000;
 +module_param_named(down_rate_limit_floor_us, sugov_down_rate_limit_floor_us, uint, 0644);
 +MODULE_PARM_DESC(down_rate_limit_floor_us, "Minimum schedutil down rate limit in us");
++
++static unsigned int sugov_cap_little_khz __read_mostly = 1600000;
++module_param_named(cap_little_khz, sugov_cap_little_khz, uint, 0644);
++MODULE_PARM_DESC(cap_little_khz, "schedutil request cap for cpu0-3 in kHz (0 = no cap)");
++
++static unsigned int sugov_cap_big_khz __read_mostly = 1900000;
++module_param_named(cap_big_khz, sugov_cap_big_khz, uint, 0644);
++MODULE_PARM_DESC(cap_big_khz, "schedutil request cap for cpu4-6 in kHz (0 = no cap)");
++
++static unsigned int sugov_cap_prime_khz __read_mostly = 2000000;
++module_param_named(cap_prime_khz, sugov_cap_prime_khz, uint, 0644);
++MODULE_PARM_DESC(cap_prime_khz, "schedutil request cap for cpu7 in kHz (0 = no cap)");
 +
  #ifdef CONFIG_OPLUS_FEATURE_SUGOV_TL
  /* Target load. Lower values result in higher CPU speeds. */
  #define DEFAULT_TARGET_LOAD 80
-@@ -770,7 +789,7 @@ static inline bool sugov_cpu_is_busy(struct sugov_cpu *sg_cpu) { return false; }
+@@ -199,6 +233,24 @@ static bool sugov_update_next_freq(struct sugov_policy *sg_policy, u64 time,
+ 				   unsigned int next_freq,
+ 				   unsigned int raw_freq)
+ {
++	unsigned int cap_khz = 0;
++
++	switch (sg_policy->policy->cpu) {
++	case 0:
++		cap_khz = sugov_cap_little_khz;
++		break;
++	case 4:
++		cap_khz = sugov_cap_big_khz;
++		break;
++	case 7:
++		cap_khz = sugov_cap_prime_khz;
++		break;
++	default:
++		break;
++	}
++	if (cap_khz && next_freq > cap_khz)
++		next_freq = cap_khz;
++
+ 	if (sg_policy->next_freq == next_freq)
+ 		return false;
  
- #define NL_RATIO 75
- #define DEFAULT_HISPEED_LOAD 90
--#define DEFAULT_CPU0_RTG_BOOST_FREQ 1000000
-+#define DEFAULT_CPU0_RTG_BOOST_FREQ 0
- #define DEFAULT_CPU4_RTG_BOOST_FREQ 0
- #define DEFAULT_CPU7_RTG_BOOST_FREQ 0
- #define DEFAULT_TARGET_LOAD_THRESH 768
-@@ -1572,8 +1591,10 @@ static int sugov_init(struct cpufreq_policy *policy)
+@@ -1572,8 +1624,10 @@ static int sugov_init(struct cpufreq_policy *policy)
  		goto stop_kthread;
  	}
  
