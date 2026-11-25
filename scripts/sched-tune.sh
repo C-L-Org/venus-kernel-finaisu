@@ -8,6 +8,11 @@
 #   s2-io-is-busy-off  : WALT io_is_busy 默认 0(IO 等待不再推高频)
 #   pelt-force         : schedutil 强制 PELT util 路径
 #                        (WALT 信号路径在 venus 上会卡小米 logo)
+#   s4-sugov-damping   : QTI cpufreq-hw 的 transition_latency=0 让 schedutil
+#                        的 up/down rate limit 全为 0(完全不限速, 频率每 tick
+#                        上下跳), 这里给 up 2ms / down 30ms 下限(可用
+#                        /sys/module/cpufreq_schedutil/parameters/ 调), 并把
+#                        小核 rtg_boost_freq 默认 1GHz 改为 0(消除跳变)
 #
 # 补丁针对 C-L-Org/android_kernel_xiaomi_sm8350_miyume@main 生成;
 # 内核树漂移时 apply 显式失败,不静默跳过。
@@ -18,7 +23,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PATCH_DIR="$SCRIPT_DIR/sched-patches"
 KERNEL_DIR="${1:?usage: sched-tune.sh <kernel_dir> [verify]}"
 MODE="${2:-apply}"
-PATCHES="s1-input-boost-off.patch s2-io-is-busy-off.patch pelt-force.patch"
+PATCHES="s1-input-boost-off.patch s2-io-is-busy-off.patch pelt-force.patch s4-sugov-damping.patch"
 
 is_applied() {
     git -C "$KERNEL_DIR" apply --check --reverse "$PATCH_DIR/$1" >/dev/null 2>&1
