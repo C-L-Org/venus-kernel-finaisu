@@ -9,10 +9,11 @@
 #   pelt-force         : schedutil 强制 PELT util 路径
 #                        (WALT 信号路径在 venus 上会卡小米 logo)
 #   s4-sugov-damping   : QTI cpufreq-hw 的 transition_latency=0 让 schedutil
-#                        的 up/down rate limit 全为 0(完全不限速, 频率每 tick
-#                        上下跳), 这里给 up 2ms / down 30ms 下限(可用
-#                        /sys/module/cpufreq_schedutil/parameters/ 调), 并把
-#                        小核 rtg_boost_freq 默认 1GHz 改为 0(消除跳变)
+#                        的 up/down rate limit 全为 0(完全不限速), 频率在整个
+#                        OPP 区间来回跳. 这里: up 2ms / down 50ms 限速下限 +
+#                        三簇请求上限 1.6/1.9/2.0GHz(收窄摆动区间). 两者均可
+#                        运行时通过 /sys/module/cpufreq_schedutil/parameters/
+#                        调整(上限写 0 即解除)
 #
 # 补丁针对 C-L-Org/android_kernel_xiaomi_sm8350_miyume@main 生成;
 # 内核树漂移时 apply 显式失败,不静默跳过。
