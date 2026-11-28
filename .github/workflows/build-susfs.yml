@@ -56,10 +56,6 @@ jobs:
         run: |
           bash ci/scripts/sched-tune.sh "$PWD/kernel"
 
-      # 只观测请求来源，不修改亮度、不做过滤。
-      - name: Add opt-in backlight request tracing (diagnostic only)
-        run: |
-          python3 ci/scripts/backlight-observe.py "$PWD/kernel"
       - name: Clone FinaSU into KernelSU/
         run: |
           rm -rf kernel/KernelSU
