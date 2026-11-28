@@ -56,14 +56,10 @@ jobs:
         run: |
           bash ci/scripts/sched-tune.sh "$PWD/kernel"
 
-      # 背光写入守卫：类原生 ROM 上厂商守护（vendor.sensor-notifier 等）会直接写
-      # /sys/class/backlight/panel0-backlight/brightness，把亮度压到极低再拉回，
-      # 与 framework 自动亮度抢写，表现为「自动亮度瞬时变暗再回升」。
-      # 内核侧按写入者身份自动判定：只拦截非受信来源的深度压暗。
-      # 运行期开关：/sys/module/<显示模块>/parameters/neko_bl_guard（0 关 /1 自动 /2 严格）
-      - name: Backlight write guard (block untrusted deep dimming)
+      # 只观测请求来源，不修改亮度、不做过滤。
+      - name: Add opt-in backlight request tracing (diagnostic only)
         run: |
-          python3 ci/scripts/backlight-guard.py "$PWD/kernel"
+          python3 ci/scripts/backlight-observe.py "$PWD/kernel"
       - name: Clone FinaSU into KernelSU/
         run: |
           rm -rf kernel/KernelSU
